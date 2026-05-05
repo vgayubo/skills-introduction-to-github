@@ -1,0 +1,1639 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MiFarmacia Personal</title>
+  <style>
+    :root {
+      --primary: #2563eb;
+      --primary-dark: #1d4ed8;
+      --success: #16a34a;
+      --warning: #d97706;
+      --danger: #dc2626;
+      --bg: #f8fafc;
+      --surface: #ffffff;
+      --border: #e2e8f0;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --radius: 8px;
+      --shadow: 0 1px 3px rgba(0,0,0,0.1);
+      --shadow-md: 0 4px 6px rgba(0,0,0,0.07), 0 2px 4px rgba(0,0,0,0.06);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ── Navigation ── */
+    .nav {
+      background: var(--primary);
+      color: white;
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      height: 56px;
+      gap: 16px;
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+    .nav-brand {
+      font-size: 18px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      white-space: nowrap;
+      letter-spacing: -0.3px;
+    }
+    .nav-links { display: flex; gap: 4px; }
+    .nav-link {
+      padding: 6px 14px;
+      border-radius: var(--radius);
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      color: rgba(255,255,255,0.8);
+      border: none;
+      background: none;
+      transition: all 0.15s;
+    }
+    .nav-link:hover, .nav-link.active {
+      background: rgba(255,255,255,0.2);
+      color: white;
+    }
+    .nav-actions { display: flex; gap: 8px; margin-left: auto; }
+
+    /* ── Layout ── */
+    .main {
+      max-width: 1180px;
+      margin: 80px auto 40px;
+      padding: 0 24px;
+    }
+
+    .view { display: none; }
+    .view.active { display: block; }
+
+    .page-title { font-size: 22px; font-weight: 700; margin-bottom: 4px; }
+    .page-subtitle { font-size: 14px; color: var(--text-muted); margin-bottom: 24px; }
+
+    /* ── Cards ── */
+    .card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+    }
+    .card-header {
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-weight: 600;
+    }
+    .card-body { padding: 20px; }
+
+    /* ── Stats ── */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .stat-card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      padding: 20px;
+    }
+    .stat-value { font-size: 34px; font-weight: 700; line-height: 1; }
+    .stat-label { font-size: 13px; color: var(--text-muted); margin-top: 6px; }
+    .stat-card.primary .stat-value { color: var(--primary); }
+    .stat-card.success .stat-value { color: var(--success); }
+    .stat-card.warning .stat-value { color: var(--warning); }
+    .stat-card.danger  .stat-value { color: var(--danger); }
+
+    /* ── Dashboard grids ── */
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+
+    /* ── Medication cards ── */
+    .med-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+      gap: 16px;
+    }
+    .med-card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      padding: 16px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .med-card:hover {
+      border-color: var(--primary);
+      box-shadow: var(--shadow-md);
+      transform: translateY(-1px);
+    }
+    .med-card-top { display: flex; gap: 12px; margin-bottom: 10px; }
+    .med-thumb {
+      width: 60px; height: 60px;
+      border-radius: 8px;
+      object-fit: cover;
+      border: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .med-thumb-ph {
+      width: 60px; height: 60px;
+      border-radius: 8px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px;
+      flex-shrink: 0;
+    }
+    .med-info { flex: 1; min-width: 0; }
+    .med-name {
+      font-weight: 600; font-size: 15px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .med-ingredient { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+    .med-dosage-line {
+      font-size: 13px; color: var(--text-muted);
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    /* ── Badges ── */
+    .badges { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 8px; }
+    .badge {
+      font-size: 11px; font-weight: 500;
+      padding: 2px 8px;
+      border-radius: 99px;
+      white-space: nowrap;
+    }
+    .badge-chronic   { background:#dbeafe; color:#1e40af; }
+    .badge-sporadic  { background:#ede9fe; color:#4c1d95; }
+    .badge-pain      { background:#fef3c7; color:#92400e; }
+    .badge-fever     { background:#fee2e2; color:#991b1b; }
+    .badge-digestive { background:#d1fae5; color:#065f46; }
+    .badge-allergy   { background:#fce7f3; color:#9d174d; }
+    .badge-antibiotic{ background:#e0f2fe; color:#0c4a6e; }
+    .badge-active    { background:#dcfce7; color:#166534; }
+    .badge-inactive  { background:#f1f5f9; color:#64748b; }
+
+    /* Expiry badges */
+    .expiry-badge {
+      display: inline-flex; align-items: center; gap: 3px;
+      font-size: 11px; font-weight: 500;
+      padding: 2px 8px; border-radius: 99px;
+    }
+    .expiry-badge.expired { background:#fee2e2; color:#991b1b; }
+    .expiry-badge.soon    { background:#fef3c7; color:#92400e; }
+    .expiry-badge.ok      { background:#dcfce7; color:#166534; }
+
+    /* ── Toolbar ── */
+    .toolbar {
+      display: flex; gap: 12px; align-items: center;
+      margin-bottom: 20px; flex-wrap: wrap;
+    }
+    .toolbar-left { display: flex; gap: 8px; flex: 1; flex-wrap: wrap; }
+    .toolbar-right { display: flex; gap: 8px; }
+
+    .search-input {
+      padding: 8px 12px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      font-size: 14px;
+      width: 300px;
+      background: var(--surface);
+      color: var(--text);
+    }
+    .search-input:focus { outline: none; border-color: var(--primary); }
+
+    .filter-tabs {
+      display: flex; gap: 3px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 3px;
+    }
+    .filter-tab {
+      padding: 5px 12px;
+      border-radius: 5px;
+      font-size: 13px;
+      cursor: pointer;
+      border: none;
+      background: none;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+    .filter-tab.active {
+      background: var(--surface);
+      color: var(--text);
+      box-shadow: var(--shadow);
+    }
+
+    /* ── Buttons ── */
+    .btn {
+      padding: 8px 16px;
+      border-radius: var(--radius);
+      font-size: 14px; font-weight: 500;
+      cursor: pointer; border: none;
+      display: inline-flex; align-items: center; gap: 6px;
+      transition: all 0.15s;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-primary  { background: var(--primary); color: white; }
+    .btn-primary:hover:not(:disabled) { background: var(--primary-dark); }
+    .btn-secondary{ background: var(--bg); color: var(--text); border: 1px solid var(--border); }
+    .btn-secondary:hover:not(:disabled) { background: var(--border); }
+    .btn-danger   { background: var(--danger); color: white; }
+    .btn-danger:hover:not(:disabled)   { background: #b91c1c; }
+    .btn-sm  { padding: 5px 10px; font-size: 12px; }
+    .btn-lg  { padding: 10px 22px; font-size: 15px; }
+
+    /* ── Forms ── */
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .form-group.full { grid-column: 1 / -1; }
+    label { font-size: 13px; font-weight: 500; }
+    label .req { color: var(--danger); }
+    input, select, textarea {
+      padding: 8px 12px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      font-size: 14px;
+      background: var(--surface);
+      color: var(--text);
+      width: 100%;
+      font-family: inherit;
+    }
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+    }
+    textarea { resize: vertical; min-height: 80px; }
+    .form-hint { font-size: 12px; color: var(--text-muted); }
+
+    /* ── Image upload ── */
+    .img-upload {
+      border: 2px dashed var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.15s;
+      background: var(--bg);
+    }
+    .img-upload:hover { border-color: var(--primary); }
+    .img-upload.has-img { border-style: solid; border-color: var(--border); }
+    .img-preview { max-width: 180px; max-height: 180px; border-radius: 8px; }
+
+    /* ── Toggle ── */
+    .toggle-group {
+      display: flex;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .toggle-opt {
+      flex: 1; padding: 8px; text-align: center;
+      cursor: pointer; font-size: 13px; font-weight: 500;
+      border: none; background: none; color: var(--text-muted);
+      transition: all 0.15s;
+    }
+    .toggle-opt.active { background: var(--primary); color: white; }
+
+    /* ── Modal ── */
+    .overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.5);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 200; padding: 24px;
+    }
+    .overlay.hidden { display: none; }
+    .modal {
+      background: var(--surface);
+      border-radius: 12px;
+      width: 100%; max-width: 700px;
+      max-height: 90vh;
+      display: flex; flex-direction: column;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+    }
+    .modal.sm { max-width: 420px; }
+    .modal-hd {
+      padding: 18px 24px;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .modal-title { font-size: 18px; font-weight: 600; }
+    .modal-body { padding: 24px; overflow-y: auto; flex: 1; }
+    .modal-ft {
+      padding: 14px 24px;
+      border-top: 1px solid var(--border);
+      display: flex; gap: 8px; justify-content: flex-end;
+    }
+    .close-btn {
+      background: none; border: none; cursor: pointer;
+      color: var(--text-muted); font-size: 20px; line-height: 1;
+      padding: 4px 6px; border-radius: 4px;
+    }
+    .close-btn:hover { background: var(--bg); color: var(--text); }
+
+    /* ── Tables ── */
+    .tbl-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    th {
+      text-align: left; padding: 10px 12px;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      font-size: 11px; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.06em;
+      color: var(--text-muted); white-space: nowrap;
+    }
+    td { padding: 11px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+    tr:last-child td { border-bottom: none; }
+    tbody tr:hover td { background: var(--bg); }
+
+    /* ── Detail view ── */
+    .detail-hd {
+      display: flex; gap: 24px; align-items: flex-start;
+      margin-bottom: 24px;
+    }
+    .detail-img {
+      width: 120px; height: 120px; border-radius: 10px;
+      object-fit: cover; border: 1px solid var(--border); flex-shrink: 0;
+    }
+    .detail-img-ph {
+      width: 120px; height: 120px; border-radius: 10px;
+      background: var(--bg); border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 48px; flex-shrink: 0;
+    }
+    .detail-title { font-size: 24px; font-weight: 700; }
+    .detail-sub { color: var(--text-muted); font-size: 15px; margin-top: 4px; }
+
+    /* ── Info sections ── */
+    .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+    .info-sec {
+      background: var(--bg);
+      border-radius: var(--radius);
+      padding: 16px;
+    }
+    .info-sec-title {
+      font-size: 11px; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.06em;
+      color: var(--text-muted); margin-bottom: 12px;
+    }
+    .info-row { display: flex; gap: 8px; margin-bottom: 8px; font-size: 14px; }
+    .info-lbl { font-weight: 500; color: var(--text-muted); min-width: 110px; flex-shrink: 0; }
+
+    /* ── Tabs ── */
+    .tabs {
+      display: flex;
+      border-bottom: 2px solid var(--border);
+      margin-bottom: 20px; gap: 0;
+    }
+    .tab {
+      padding: 10px 16px; font-size: 14px; font-weight: 500;
+      cursor: pointer; border: none; background: none;
+      color: var(--text-muted);
+      border-bottom: 2px solid transparent; margin-bottom: -2px;
+    }
+    .tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+    .tab-pane { display: none; }
+    .tab-pane.active { display: block; }
+
+    /* ── Alert list ── */
+    .alert-list { display: flex; flex-direction: column; gap: 8px; }
+    .alert-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 10px 12px; border-radius: var(--radius);
+      font-size: 13px; cursor: pointer;
+    }
+    .alert-item.expired { background:#fee2e2; color:#991b1b; }
+    .alert-item.soon    { background:#fef3c7; color:#92400e; }
+
+    /* ── Toasts ── */
+    .toasts {
+      position: fixed; top: 68px; right: 20px;
+      z-index: 400; display: flex; flex-direction: column; gap: 8px;
+    }
+    .toast {
+      background: var(--text); color: white;
+      padding: 11px 16px; border-radius: var(--radius);
+      font-size: 14px; max-width: 320px;
+      display: flex; align-items: center; gap: 8px;
+      animation: slideIn 0.2s ease; box-shadow: var(--shadow-md);
+    }
+    .toast.success { background: var(--success); }
+    .toast.error   { background: var(--danger); }
+    .toast.warning { background: var(--warning); }
+    @keyframes slideIn { from { transform:translateX(110%); opacity:0; } to { transform:translateX(0); opacity:1; } }
+
+    /* ── Empty state ── */
+    .empty {
+      text-align: center; padding: 48px 24px; color: var(--text-muted);
+    }
+    .empty-icon { font-size: 44px; margin-bottom: 14px; }
+    .empty h3   { font-size: 17px; font-weight: 600; margin-bottom: 6px; color: var(--text); }
+    .empty p    { font-size: 14px; }
+
+    /* ── Utils ── */
+    .flex     { display: flex; }
+    .items-center { align-items: center; }
+    .gap-2    { gap: 8px; }
+    .gap-3    { gap: 12px; }
+    .mt-4     { margin-top: 16px; }
+    .mb-4     { margin-bottom: 16px; }
+    .ml-auto  { margin-left: auto; }
+    .text-muted { color: var(--text-muted); }
+    .text-sm  { font-size: 13px; }
+    .font-mono{ font-family: 'Courier New', monospace; }
+    .fw-600   { font-weight: 600; }
+
+    /* ── Responsive ── */
+    @media (max-width: 768px) {
+      .main { padding: 0 16px; }
+      .form-grid { grid-template-columns: 1fr; }
+      .info-grid { grid-template-columns: 1fr; }
+      .grid-2    { grid-template-columns: 1fr; }
+      .detail-hd { flex-direction: column; }
+      .search-input { width: 100%; }
+      .nav-links { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Toasts -->
+<div class="toasts" id="toasts"></div>
+
+<!-- Navigation -->
+<nav class="nav">
+  <div class="nav-brand">💊 MiFarmacia</div>
+  <div class="nav-links">
+    <button class="nav-link active" data-nav="dashboard">Panel</button>
+    <button class="nav-link" data-nav="medications">Medicamentos</button>
+    <button class="nav-link" data-nav="acquisitions">Adquisiciones</button>
+  </div>
+  <div class="nav-actions">
+    <button class="btn btn-secondary btn-sm" id="btn-export">⬇ Exportar</button>
+    <label class="btn btn-secondary btn-sm" style="margin:0;cursor:pointer">
+      ⬆ Importar
+      <input type="file" accept=".json" id="import-file" style="display:none">
+    </label>
+  </div>
+</nav>
+
+<main class="main">
+
+  <!-- ══════════════════ DASHBOARD ══════════════════ -->
+  <div id="view-dashboard" class="view active">
+    <div class="page-title">Panel de Control</div>
+    <div class="page-subtitle" id="dash-date"></div>
+
+    <div class="stats-grid" id="stats-grid"></div>
+
+    <div class="grid-2" style="margin-bottom:20px">
+      <div class="card">
+        <div class="card-header">
+          <span>⚠️ Alertas de Caducidad</span>
+          <span class="text-sm text-muted" id="alert-count"></span>
+        </div>
+        <div class="card-body" id="expiry-alerts"></div>
+      </div>
+      <div class="card">
+        <div class="card-header">💊 Medicación Crónica Activa</div>
+        <div class="card-body" id="chronic-list"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">🕐 Últimas Adquisiciones</div>
+      <div class="card-body" id="recent-acqs"></div>
+    </div>
+  </div>
+
+  <!-- ══════════════════ MEDICATIONS ══════════════════ -->
+  <div id="view-medications" class="view">
+    <div class="page-title">Medicamentos</div>
+    <div class="page-subtitle">Gestiona todos tus medicamentos</div>
+    <div class="toolbar">
+      <div class="toolbar-left">
+        <input type="text" class="search-input" id="med-search" placeholder="🔍 Buscar por nombre o principio activo…">
+        <div class="filter-tabs" id="med-filters">
+          <button class="filter-tab active" data-filter="all">Todos</button>
+          <button class="filter-tab" data-filter="chronic">Crónicos</button>
+          <button class="filter-tab" data-filter="sporadic">Esporádicos</button>
+          <button class="filter-tab" data-filter="active">Activos</button>
+          <button class="filter-tab" data-filter="inactive">Inactivos</button>
+        </div>
+      </div>
+      <div class="toolbar-right">
+        <button class="btn btn-primary" id="btn-new-med">+ Nuevo Medicamento</button>
+      </div>
+    </div>
+    <div class="med-grid" id="med-grid"></div>
+  </div>
+
+  <!-- ══════════════════ DETAIL ══════════════════ -->
+  <div id="view-detail" class="view">
+    <div id="detail-content"></div>
+  </div>
+
+  <!-- ══════════════════ ACQUISITIONS ══════════════════ -->
+  <div id="view-acquisitions" class="view">
+    <div class="page-title">Registro de Adquisiciones</div>
+    <div class="page-subtitle">Historial completo de compras en farmacia</div>
+    <div class="toolbar">
+      <div class="toolbar-left">
+        <input type="text" class="search-input" id="acq-search" placeholder="🔍 Buscar por medicamento o farmacia…">
+      </div>
+      <div class="toolbar-right">
+        <button class="btn btn-primary" id="btn-new-acq">+ Nueva Adquisición</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="tbl-wrap" id="acq-table"></div>
+    </div>
+  </div>
+
+</main>
+
+<!-- ══════════════════ MODAL: MEDICATION ══════════════════ -->
+<div class="overlay hidden" id="med-overlay">
+  <div class="modal">
+    <div class="modal-hd">
+      <span class="modal-title" id="med-modal-title">Nuevo Medicamento</span>
+      <button class="close-btn" data-close="med-overlay">✕</button>
+    </div>
+    <div class="modal-body">
+      <form id="med-form">
+        <div class="form-grid">
+
+          <div class="form-group">
+            <label>Nombre Comercial <span class="req">*</span></label>
+            <input type="text" id="f-name" required placeholder="ej. Paracetamol Normon 1g">
+          </div>
+
+          <div class="form-group">
+            <label>Principio Activo</label>
+            <input type="text" id="f-ingredient" placeholder="ej. Paracetamol">
+          </div>
+
+          <div class="form-group full">
+            <label>Categoría</label>
+            <div class="toggle-group">
+              <button type="button" class="toggle-opt active" id="cat-chronic-btn" data-cat="chronic">💊 Crónico</button>
+              <button type="button" class="toggle-opt" id="cat-sporadic-btn" data-cat="sporadic">🌡️ Esporádico</button>
+            </div>
+            <input type="hidden" id="f-category" value="chronic">
+          </div>
+
+          <div class="form-group full" id="sporadic-type-row" style="display:none">
+            <label>Tipo de Uso Esporádico</label>
+            <select id="f-sporadic-type">
+              <option value="pain">🩹 Dolor</option>
+              <option value="fever">🌡️ Fiebre</option>
+              <option value="digestive">🫄 Digestivo</option>
+              <option value="allergy">🤧 Alergia</option>
+              <option value="antibiotic">🔬 Antibiótico</option>
+              <option value="other">💊 Otro</option>
+            </select>
+          </div>
+
+          <div class="form-group full">
+            <label>Posología <span class="req">*</span></label>
+            <input type="text" id="f-dosage" required placeholder="ej. 1 comprimido cada 8 horas con las comidas">
+          </div>
+
+          <div class="form-group full">
+            <label>Prescrito Para</label>
+            <textarea id="f-prescribed-for" placeholder="ej. Control de la hipertensión arterial…"></textarea>
+          </div>
+
+          <div class="form-group">
+            <label>Fecha de Inicio</label>
+            <input type="date" id="f-start-date">
+          </div>
+
+          <div class="form-group">
+            <label>Médico Prescriptor</label>
+            <input type="text" id="f-doctor" placeholder="ej. Dr. García Pérez">
+          </div>
+
+          <div class="form-group full">
+            <label>Enlace al Prospecto Oficial</label>
+            <div class="flex gap-2">
+              <input type="url" id="f-prospectus" placeholder="https://cima.aemps.es/…">
+              <button type="button" class="btn btn-secondary btn-sm" id="btn-search-prospectus">🔍 Buscar AEMPS</button>
+            </div>
+            <span class="form-hint">Base de datos oficial de la Agencia Española de Medicamentos (AEMPS)</span>
+          </div>
+
+          <div class="form-group full">
+            <label>Imagen de la Caja</label>
+            <div class="img-upload" id="img-upload-area">
+              <div id="img-preview-wrap">
+                <div style="font-size:36px;margin-bottom:8px">📷</div>
+                <div style="font-size:13px;color:var(--text-muted)">Haz clic para subir la imagen de la caja</div>
+                <div style="font-size:12px;color:var(--text-muted);margin-top:4px">JPG, PNG, WebP · máx. 5 MB</div>
+              </div>
+            </div>
+            <input type="file" id="img-input" accept="image/*" style="display:none">
+            <button type="button" class="btn btn-secondary btn-sm mt-4" id="btn-remove-img" style="display:none">✕ Eliminar imagen</button>
+            <input type="hidden" id="f-image">
+          </div>
+
+          <div class="form-group full">
+            <label>Notas / Observaciones</label>
+            <textarea id="f-notes" placeholder="Contraindicaciones conocidas, efectos secundarios experimentados, instrucciones especiales…"></textarea>
+          </div>
+
+          <div class="form-group full">
+            <label>Estado</label>
+            <div class="toggle-group">
+              <button type="button" class="toggle-opt active" id="status-active-btn">✓ Activo</button>
+              <button type="button" class="toggle-opt" id="status-inactive-btn">✕ Inactivo</button>
+            </div>
+            <input type="hidden" id="f-is-active" value="true">
+          </div>
+
+        </div>
+        <input type="hidden" id="f-id">
+      </form>
+    </div>
+    <div class="modal-ft">
+      <button class="btn btn-secondary" data-close="med-overlay">Cancelar</button>
+      <button class="btn btn-primary" id="btn-save-med">Guardar Medicamento</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════ MODAL: ACQUISITION ══════════════════ -->
+<div class="overlay hidden" id="acq-overlay">
+  <div class="modal">
+    <div class="modal-hd">
+      <span class="modal-title">Nueva Compra en Farmacia</span>
+      <button class="close-btn" data-close="acq-overlay">✕</button>
+    </div>
+    <div class="modal-body">
+      <form id="acq-form">
+        <div class="form-grid">
+
+          <div class="form-group full">
+            <label>Medicamento <span class="req">*</span></label>
+            <select id="af-med-id" required>
+              <option value="">Selecciona un medicamento…</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Fecha de Compra <span class="req">*</span></label>
+            <input type="date" id="af-date" required>
+          </div>
+
+          <div class="form-group">
+            <label>Farmacia</label>
+            <input type="text" id="af-pharmacy" placeholder="ej. Farmacia Central">
+          </div>
+
+          <div class="form-group">
+            <label>Nº de Envases</label>
+            <input type="number" id="af-quantity" min="1" value="1">
+          </div>
+
+          <div class="form-group">
+            <label>Precio Total (€)</label>
+            <input type="number" id="af-price" min="0" step="0.01" placeholder="0.00">
+          </div>
+
+          <div class="form-group">
+            <label>Fecha de Caducidad <span class="req">*</span></label>
+            <input type="month" id="af-expiry" required>
+            <span class="form-hint">Mes/Año tal como aparece en el envase</span>
+          </div>
+
+          <div class="form-group">
+            <label>Número de Lote</label>
+            <input type="text" id="af-lot" placeholder="ej. AB12345" class="font-mono">
+          </div>
+
+          <div class="form-group full">
+            <label>Notas</label>
+            <textarea id="af-notes" placeholder="Observaciones sobre esta compra…"></textarea>
+          </div>
+
+        </div>
+        <input type="hidden" id="af-id">
+      </form>
+    </div>
+    <div class="modal-ft">
+      <button class="btn btn-secondary" data-close="acq-overlay">Cancelar</button>
+      <button class="btn btn-primary" id="btn-save-acq">Registrar Compra</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════ MODAL: CONFIRM ══════════════════ -->
+<div class="overlay hidden" id="confirm-overlay">
+  <div class="modal sm">
+    <div class="modal-hd">
+      <span class="modal-title">Confirmar</span>
+    </div>
+    <div class="modal-body">
+      <p id="confirm-msg" style="font-size:15px;line-height:1.5"></p>
+    </div>
+    <div class="modal-ft">
+      <button class="btn btn-secondary" data-close="confirm-overlay">Cancelar</button>
+      <button class="btn btn-danger" id="btn-confirm-ok">Eliminar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+/* ═══════════════════════════════════════════
+   DB — IndexedDB wrapper
+═══════════════════════════════════════════ */
+const DB = {
+  _db: null,
+
+  init() {
+    return new Promise((res, rej) => {
+      const req = indexedDB.open('MiFarmaciaDB', 1);
+      req.onupgradeneeded = e => {
+        const db = e.target.result;
+        if (!db.objectStoreNames.contains('medications')) {
+          const s = db.createObjectStore('medications', { keyPath: 'id' });
+          s.createIndex('category', 'category');
+        }
+        if (!db.objectStoreNames.contains('acquisitions')) {
+          const s = db.createObjectStore('acquisitions', { keyPath: 'id' });
+          s.createIndex('medicationId', 'medicationId');
+        }
+      };
+      req.onsuccess = e => { this._db = e.target.result; res(); };
+      req.onerror   = e => rej(e.target.error);
+    });
+  },
+
+  _tx(store, mode, fn) {
+    return new Promise((res, rej) => {
+      const req = this._db.transaction(store, mode).objectStore(store);
+      const r = fn(req);
+      r.onsuccess = () => res(r.result);
+      r.onerror   = () => rej(r.error);
+    });
+  },
+
+  getAll(store)        { return this._tx(store, 'readonly',  s => s.getAll()); },
+  get(store, id)       { return this._tx(store, 'readonly',  s => s.get(id)); },
+  put(store, item)     { return this._tx(store, 'readwrite', s => s.put(item)); },
+  remove(store, id)    { return this._tx(store, 'readwrite', s => s.delete(id)); },
+  clear(store)         { return this._tx(store, 'readwrite', s => s.clear()); },
+};
+
+/* ═══════════════════════════════════════════
+   STATE
+═══════════════════════════════════════════ */
+const S = {
+  medications:  [],
+  acquisitions: [],
+  view:         'dashboard',
+  filter:       'all',
+  detailId:     null,
+};
+
+/* ═══════════════════════════════════════════
+   UTILS
+═══════════════════════════════════════════ */
+const U = {
+  uid: () => crypto.randomUUID
+    ? crypto.randomUUID()
+    : Date.now().toString(36) + Math.random().toString(36).slice(2),
+
+  fmtDate(d) {
+    if (!d) return '—';
+    const [y, m, day] = d.split('-');
+    return `${day}/${m}/${y}`;
+  },
+
+  fmtMonth(m) {
+    if (!m) return '—';
+    const [y, mo] = m.split('-');
+    const names = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+    return `${names[+mo - 1]} ${y}`;
+  },
+
+  fmtPrice(p) {
+    if (p === null || p === undefined || p === '') return '—';
+    return (+p).toFixed(2) + ' €';
+  },
+
+  expiryStatus(monthStr) {
+    if (!monthStr) return null;
+    const [y, m] = monthStr.split('-').map(Number);
+    const exp  = new Date(y, m, 0); // last day of that month
+    const days = Math.floor((exp - new Date()) / 86400000);
+    if (days < 0)  return 'expired';
+    if (days <= 30) return 'soon';
+    return 'ok';
+  },
+
+  daysTo(monthStr) {
+    if (!monthStr) return null;
+    const [y, m] = monthStr.split('-').map(Number);
+    return Math.floor((new Date(y, m, 0) - new Date()) / 86400000);
+  },
+
+  expiryBadge(monthStr) {
+    const st = this.expiryStatus(monthStr);
+    if (!st) return '';
+    const days = this.daysTo(monthStr);
+    let label = '';
+    if (st === 'expired') label = `❌ Caducado`;
+    else if (st === 'soon') label = days === 0 ? '⚠️ Caduca hoy' : `⚠️ ${days}d`;
+    else label = `✓ ${this.fmtMonth(monthStr)}`;
+    return `<span class="expiry-badge ${st}">${label}</span>`;
+  },
+
+  icon(med) {
+    if (med.category === 'chronic') return '💊';
+    const m = { pain:'🩹', fever:'🌡️', digestive:'🫄', allergy:'🤧', antibiotic:'🔬', other:'💊' };
+    return m[med.sporadicType] || '💊';
+  },
+
+  catBadge(med) {
+    if (med.category === 'chronic') return `<span class="badge badge-chronic">💊 Crónico</span>`;
+    const labels = { pain:'Dolor', fever:'Fiebre', digestive:'Digestivo', allergy:'Alergia', antibiotic:'Antibiótico', other:'Otro' };
+    const cls    = { pain:'badge-pain', fever:'badge-fever', digestive:'badge-digestive', allergy:'badge-allergy', antibiotic:'badge-antibiotic', other:'badge-sporadic' };
+    const t = med.sporadicType || 'other';
+    return `<span class="badge ${cls[t] || 'badge-sporadic'}">${U.icon(med)} ${labels[t]}</span>`;
+  },
+
+  nextExpiry(medId) {
+    const dates = S.acquisitions
+      .filter(a => a.medicationId === medId && a.expirationDate)
+      .map(a => a.expirationDate)
+      .sort();
+    return dates[0] || null;
+  },
+
+  esc(str) {
+    return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+};
+
+/* ═══════════════════════════════════════════
+   TOAST
+═══════════════════════════════════════════ */
+function toast(msg, type = 'default') {
+  const c = document.getElementById('toasts');
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  const icon = {success:'✓', error:'✕', warning:'⚠️'};
+  el.innerHTML = `<span>${icon[type] || 'ℹ'}</span> ${U.esc(msg)}`;
+  c.appendChild(el);
+  setTimeout(() => {
+    el.style.transition = 'all .3s';
+    el.style.opacity    = '0';
+    el.style.transform  = 'translateX(110%)';
+    setTimeout(() => el.remove(), 300);
+  }, 3200);
+}
+
+/* ═══════════════════════════════════════════
+   RENDER — DASHBOARD
+═══════════════════════════════════════════ */
+function renderDashboard() {
+  const meds = S.medications;
+  const acqs = S.acquisitions;
+
+  // Date subtitle
+  document.getElementById('dash-date').textContent =
+    new Date().toLocaleDateString('es-ES', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+
+  // Stats
+  const totalMeds   = meds.length;
+  const chronicActive = meds.filter(m => m.category === 'chronic' && m.isActive).length;
+  const sporadicCt  = meds.filter(m => m.category === 'sporadic').length;
+  const alertCt     = acqs.filter(a => {
+    const s = U.expiryStatus(a.expirationDate);
+    return s === 'expired' || s === 'soon';
+  }).length;
+
+  document.getElementById('stats-grid').innerHTML = `
+    <div class="stat-card primary">
+      <div class="stat-value">${totalMeds}</div>
+      <div class="stat-label">💊 Medicamentos en total</div>
+    </div>
+    <div class="stat-card success">
+      <div class="stat-value">${chronicActive}</div>
+      <div class="stat-label">📋 Medicación crónica activa</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">${sporadicCt}</div>
+      <div class="stat-label">🌡️ Medicación esporádica</div>
+    </div>
+    <div class="stat-card ${alertCt > 0 ? 'warning' : 'success'}">
+      <div class="stat-value">${alertCt}</div>
+      <div class="stat-label">⚠️ Alertas de caducidad</div>
+    </div>`;
+
+  // Expiry alerts
+  const alerts = acqs
+    .filter(a => ['expired','soon'].includes(U.expiryStatus(a.expirationDate)))
+    .map(a => ({ a, med: meds.find(m => m.id === a.medicationId), st: U.expiryStatus(a.expirationDate) }))
+    .filter(x => x.med)
+    .sort((x, y) => U.daysTo(x.a.expirationDate) - U.daysTo(y.a.expirationDate));
+
+  document.getElementById('alert-count').textContent = `${alerts.length} alerta${alerts.length !== 1 ? 's' : ''}`;
+
+  document.getElementById('expiry-alerts').innerHTML = alerts.length === 0
+    ? `<div style="text-align:center;padding:24px;color:var(--text-muted)"><div style="font-size:32px">✅</div><div style="margin-top:8px;font-size:13px">Sin alertas — todo en orden</div></div>`
+    : `<div class="alert-list">${alerts.map(({ a, med, st }) => {
+        const days = U.daysTo(a.expirationDate);
+        const dText = days < 0 ? `Caducó hace ${Math.abs(days)} día${Math.abs(days) !== 1 ? 's' : ''}` :
+          days === 0 ? 'Caduca hoy' : `Caduca en ${days} día${days !== 1 ? 's' : ''}`;
+        return `<div class="alert-item ${st}" data-nav-detail="${med.id}">
+          <span style="font-size:20px">${U.icon(med)}</span>
+          <div style="flex:1">
+            <div class="fw-600">${U.esc(med.name)}</div>
+            <div style="font-size:12px;margin-top:2px">${dText} · ${U.fmtMonth(a.expirationDate)}</div>
+          </div>
+          <span>${st === 'expired' ? '❌' : '⚠️'}</span>
+        </div>`;
+      }).join('')}</div>`;
+
+  // Chronic list
+  const chronic = meds.filter(m => m.category === 'chronic' && m.isActive);
+  document.getElementById('chronic-list').innerHTML = chronic.length === 0
+    ? `<div style="text-align:center;padding:24px;color:var(--text-muted);font-size:13px">Sin medicación crónica registrada</div>`
+    : chronic.map(med => {
+        const ne = U.nextExpiry(med.id);
+        const st = U.expiryStatus(ne);
+        return `<div class="flex items-center gap-2" style="padding:9px 0;border-bottom:1px solid var(--border);cursor:pointer" data-nav-detail="${med.id}">
+          ${med.image ? `<img src="${med.image}" class="med-thumb" style="width:36px;height:36px">` : `<div class="med-thumb-ph" style="width:36px;height:36px;font-size:14px">${U.icon(med)}</div>`}
+          <div style="flex:1;min-width:0">
+            <div style="font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${U.esc(med.name)}</div>
+            <div style="font-size:12px;color:var(--text-muted)">${U.esc(med.dosage || '—')}</div>
+          </div>
+          ${ne ? `<span class="expiry-badge ${st}" style="font-size:11px">${U.fmtMonth(ne)}</span>` : ''}
+        </div>`;
+      }).join('');
+
+  // Recent acquisitions
+  const recent = [...acqs].sort((a,b) => b.date.localeCompare(a.date)).slice(0, 6);
+  document.getElementById('recent-acqs').innerHTML = recent.length === 0
+    ? `<div style="text-align:center;padding:24px;color:var(--text-muted);font-size:13px">Sin adquisiciones registradas aún</div>`
+    : `<div class="tbl-wrap"><table>
+        <thead><tr><th>Medicamento</th><th>Fecha</th><th>Farmacia</th><th>Envases</th><th>Caducidad</th><th>Precio</th></tr></thead>
+        <tbody>${recent.map(acq => {
+          const med = meds.find(m => m.id === acq.medicationId);
+          const st  = U.expiryStatus(acq.expirationDate);
+          return `<tr>
+            <td class="fw-600">${U.esc(med ? med.name : 'Desconocido')}</td>
+            <td>${U.fmtDate(acq.date)}</td>
+            <td>${U.esc(acq.pharmacy || '—')}</td>
+            <td>${acq.quantity || 1}</td>
+            <td>${acq.expirationDate ? U.expiryBadge(acq.expirationDate) : '—'}</td>
+            <td>${U.fmtPrice(acq.price)}</td>
+          </tr>`;
+        }).join('')}</tbody>
+      </table></div>`;
+}
+
+/* ═══════════════════════════════════════════
+   RENDER — MEDICATIONS
+═══════════════════════════════════════════ */
+function renderMedications() {
+  const q = (document.getElementById('med-search').value || '').toLowerCase();
+  const f = S.filter;
+
+  let list = S.medications.filter(m => {
+    if (q) {
+      const hay = `${m.name} ${m.activeIngredient || ''}`.toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    if (f === 'chronic')  return m.category === 'chronic';
+    if (f === 'sporadic') return m.category === 'sporadic';
+    if (f === 'active')   return m.isActive;
+    if (f === 'inactive') return !m.isActive;
+    return true;
+  }).sort((a,b) => a.name.localeCompare(b.name));
+
+  const grid = document.getElementById('med-grid');
+  if (list.length === 0) {
+    grid.innerHTML = `<div class="empty" style="grid-column:1/-1">
+      <div class="empty-icon">💊</div>
+      <h3>Sin medicamentos</h3>
+      <p>${q ? 'No hay resultados para tu búsqueda.' : 'Añade tu primer medicamento con el botón superior.'}</p>
+    </div>`;
+    return;
+  }
+
+  grid.innerHTML = list.map(med => {
+    const ne = U.nextExpiry(med.id);
+    const st = U.expiryStatus(ne);
+    const expiryLine = ne
+      ? `<div style="margin-top:8px;font-size:12px;padding:3px 8px;border-radius:4px;background:${st==='expired'?'#fee2e2':st==='soon'?'#fef3c7':'#dcfce7'};color:${st==='expired'?'#991b1b':st==='soon'?'#92400e':'#166534'}">
+           ${st==='expired'?'❌ Caducado':st==='soon'?'⚠️ Caduca pronto':'✓ Vigente'} · ${U.fmtMonth(ne)}
+         </div>`
+      : '';
+    return `<div class="med-card" data-nav-detail="${med.id}">
+      <div class="med-card-top">
+        ${med.image
+          ? `<img src="${med.image}" class="med-thumb" alt="${U.esc(med.name)}">`
+          : `<div class="med-thumb-ph">${U.icon(med)}</div>`}
+        <div class="med-info">
+          <div class="med-name">${U.esc(med.name)}</div>
+          ${med.activeIngredient ? `<div class="med-ingredient">${U.esc(med.activeIngredient)}</div>` : ''}
+          <div class="badges">
+            ${U.catBadge(med)}
+            <span class="badge ${med.isActive ? 'badge-active' : 'badge-inactive'}">${med.isActive ? '● Activo' : '○ Inactivo'}</span>
+          </div>
+        </div>
+      </div>
+      ${med.dosage ? `<div class="med-dosage-line text-muted">${U.esc(med.dosage)}</div>` : ''}
+      ${expiryLine}
+      ${med.prescribedFor ? `<div class="med-dosage-line text-muted" style="margin-top:6px">${U.esc(med.prescribedFor)}</div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+/* ═══════════════════════════════════════════
+   RENDER — DETAIL
+═══════════════════════════════════════════ */
+function renderDetail(medId) {
+  const med  = S.medications.find(m => m.id === medId);
+  if (!med) { navigate('medications'); return; }
+
+  const acqs = S.acquisitions
+    .filter(a => a.medicationId === medId)
+    .sort((a,b) => b.date.localeCompare(a.date));
+
+  const totalSpent = acqs.reduce((s,a) => s + (a.price ? +a.price : 0), 0);
+  const ne = U.nextExpiry(medId);
+
+  const searchUrl = `https://cima.aemps.es/cima/publico/buscadoravanzado.html#nombre=${encodeURIComponent(med.name)}`;
+
+  const acqRows = acqs.length === 0
+    ? `<div class="empty"><div class="empty-icon">🛒</div><h3>Sin compras registradas</h3><p>Usa el botón "+ Registrar Compra" para añadir.</p></div>`
+    : `<div class="tbl-wrap"><table>
+        <thead><tr><th>Fecha</th><th>Farmacia</th><th>Envases</th><th>Caducidad</th><th>Lote</th><th>Precio</th><th></th></tr></thead>
+        <tbody>${acqs.map(acq => {
+          const st = U.expiryStatus(acq.expirationDate);
+          return `<tr>
+            <td>${U.fmtDate(acq.date)}</td>
+            <td>${U.esc(acq.pharmacy || '—')}</td>
+            <td>${acq.quantity || 1}</td>
+            <td>${acq.expirationDate ? U.expiryBadge(acq.expirationDate) : '—'}</td>
+            <td class="font-mono text-sm">${U.esc(acq.lot || '—')}</td>
+            <td>${U.fmtPrice(acq.price)}</td>
+            <td><button class="btn btn-secondary btn-sm" data-del-acq="${acq.id}">🗑️</button></td>
+          </tr>
+          ${acq.notes ? `<tr><td colspan="7" style="padding-top:0;font-size:12px;color:var(--text-muted)">📝 ${U.esc(acq.notes)}</td></tr>` : ''}`;
+        }).join('')}</tbody>
+      </table></div>`;
+
+  document.getElementById('detail-content').innerHTML = `
+    <div style="margin-bottom:16px">
+      <button class="btn btn-secondary btn-sm" data-nav="medications">← Volver a Medicamentos</button>
+    </div>
+
+    <div class="card">
+      <div class="card-body">
+
+        <div class="detail-hd">
+          ${med.image
+            ? `<img src="${med.image}" class="detail-img" alt="${U.esc(med.name)}">`
+            : `<div class="detail-img-ph">${U.icon(med)}</div>`}
+          <div style="flex:1">
+            <div style="display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap">
+              <div>
+                <div class="detail-title">${U.esc(med.name)}</div>
+                ${med.activeIngredient ? `<div class="detail-sub">${U.esc(med.activeIngredient)}</div>` : ''}
+              </div>
+              <div style="margin-left:auto;display:flex;gap:8px;flex-wrap:wrap">
+                <button class="btn btn-secondary btn-sm" data-edit-med="${med.id}">✏️ Editar</button>
+                <button class="btn btn-primary btn-sm" data-open-acq="${med.id}">+ Registrar Compra</button>
+                <button class="btn btn-danger btn-sm" data-del-med="${med.id}">🗑️ Eliminar</button>
+              </div>
+            </div>
+            <div class="badges" style="margin-top:12px">
+              ${U.catBadge(med)}
+              <span class="badge ${med.isActive ? 'badge-active' : 'badge-inactive'}">${med.isActive ? '● Activo' : '○ Inactivo'}</span>
+            </div>
+            <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+              ${med.prospectusUrl
+                ? `<a href="${U.esc(med.prospectusUrl)}" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm">📄 Ver Prospecto Oficial</a>`
+                : `<a href="${U.esc(searchUrl)}" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm">🔍 Buscar en AEMPS</a>`}
+            </div>
+          </div>
+        </div>
+
+        <div class="tabs">
+          <button class="tab active" data-tab="info">📋 Información</button>
+          <button class="tab" data-tab="acquisitions">🛒 Compras (${acqs.length})</button>
+          ${med.notes ? `<button class="tab" data-tab="notes">📝 Notas</button>` : ''}
+        </div>
+
+        <div id="tab-info" class="tab-pane active">
+          <div class="info-grid">
+            <div class="info-sec">
+              <div class="info-sec-title">Prescripción</div>
+              <div class="info-row"><span class="info-lbl">Posología:</span><span>${U.esc(med.dosage || '—')}</span></div>
+              <div class="info-row"><span class="info-lbl">Para:</span><span>${U.esc(med.prescribedFor || '—')}</span></div>
+              <div class="info-row"><span class="info-lbl">Desde:</span><span>${U.fmtDate(med.startDate)}</span></div>
+              <div class="info-row"><span class="info-lbl">Médico:</span><span>${U.esc(med.doctor || '—')}</span></div>
+            </div>
+            <div class="info-sec">
+              <div class="info-sec-title">Historial de Compras</div>
+              <div class="info-row"><span class="info-lbl">Nº compras:</span><span>${acqs.length}</span></div>
+              <div class="info-row"><span class="info-lbl">Gasto total:</span><span>${U.fmtPrice(totalSpent || null)}</span></div>
+              <div class="info-row"><span class="info-lbl">Última compra:</span><span>${acqs[0] ? U.fmtDate(acqs[0].date) : '—'}</span></div>
+              <div class="info-row"><span class="info-lbl">Próx. caducidad:</span><span>${ne ? U.expiryBadge(ne) : '—'}</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div id="tab-acquisitions" class="tab-pane">
+          <div style="display:flex;justify-content:flex-end;margin-bottom:12px">
+            <button class="btn btn-primary btn-sm" data-open-acq="${med.id}">+ Registrar Compra</button>
+          </div>
+          ${acqRows}
+        </div>
+
+        ${med.notes ? `
+        <div id="tab-notes" class="tab-pane">
+          <div style="background:var(--bg);padding:16px;border-radius:var(--radius);font-size:14px;line-height:1.7;white-space:pre-wrap">${U.esc(med.notes)}</div>
+        </div>` : ''}
+
+      </div>
+    </div>`;
+}
+
+/* ═══════════════════════════════════════════
+   RENDER — ACQUISITIONS LIST
+═══════════════════════════════════════════ */
+function renderAcquisitions() {
+  const q = (document.getElementById('acq-search').value || '').toLowerCase();
+  let list = S.acquisitions.filter(acq => {
+    if (!q) return true;
+    const med = S.medications.find(m => m.id === acq.medicationId);
+    return `${med?.name || ''} ${acq.pharmacy || ''}`.toLowerCase().includes(q);
+  }).sort((a,b) => b.date.localeCompare(a.date));
+
+  document.getElementById('acq-table').innerHTML = list.length === 0
+    ? `<div class="empty"><div class="empty-icon">🛒</div><h3>Sin adquisiciones</h3><p>${q ? 'No hay resultados.' : 'Registra tu primera compra en farmacia.'}</p></div>`
+    : `<table>
+        <thead><tr><th>Medicamento</th><th>Fecha</th><th>Farmacia</th><th>Envases</th><th>Caducidad</th><th>Lote</th><th>Precio</th><th></th></tr></thead>
+        <tbody>${list.map(acq => {
+          const med = S.medications.find(m => m.id === acq.medicationId);
+          return `<tr>
+            <td class="fw-600" style="cursor:pointer;color:var(--primary)" data-nav-detail="${acq.medicationId}">${U.esc(med?.name || 'Desconocido')}</td>
+            <td>${U.fmtDate(acq.date)}</td>
+            <td>${U.esc(acq.pharmacy || '—')}</td>
+            <td>${acq.quantity || 1}</td>
+            <td>${acq.expirationDate ? U.expiryBadge(acq.expirationDate) : '—'}</td>
+            <td class="font-mono text-sm">${U.esc(acq.lot || '—')}</td>
+            <td>${U.fmtPrice(acq.price)}</td>
+            <td><button class="btn btn-secondary btn-sm" data-del-acq="${acq.id}">🗑️</button></td>
+          </tr>
+          ${acq.notes ? `<tr><td colspan="8" style="padding-top:0;font-size:12px;color:var(--text-muted)">📝 ${U.esc(acq.notes)}</td></tr>` : ''}`;
+        }).join('')}</tbody>
+      </table>`;
+}
+
+/* ═══════════════════════════════════════════
+   NAVIGATION
+═══════════════════════════════════════════ */
+function navigate(view, id) {
+  S.view = view;
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+
+  if (view === 'detail' && id) {
+    S.detailId = id;
+    document.getElementById('view-detail').classList.add('active');
+    renderDetail(id);
+    return;
+  }
+
+  const el = document.getElementById(`view-${view}`);
+  if (el) el.classList.add('active');
+
+  const navBtn = document.querySelector(`.nav-link[data-nav="${view}"]`);
+  if (navBtn) navBtn.classList.add('active');
+
+  if (view === 'dashboard')    renderDashboard();
+  if (view === 'medications')  renderMedications();
+  if (view === 'acquisitions') renderAcquisitions();
+}
+
+/* ═══════════════════════════════════════════
+   MEDICATION FORM
+═══════════════════════════════════════════ */
+function openMedModal(editId) {
+  const form = document.getElementById('med-form');
+  form.reset();
+  document.getElementById('f-id').value     = editId || '';
+  document.getElementById('f-image').value  = '';
+  document.getElementById('btn-remove-img').style.display = 'none';
+  document.getElementById('img-upload-area').classList.remove('has-img');
+  document.getElementById('img-preview-wrap').innerHTML = `
+    <div style="font-size:36px;margin-bottom:8px">📷</div>
+    <div style="font-size:13px;color:var(--text-muted)">Haz clic para subir la imagen de la caja</div>
+    <div style="font-size:12px;color:var(--text-muted);margin-top:4px">JPG, PNG, WebP · máx. 5 MB</div>`;
+
+  if (editId) {
+    const med = S.medications.find(m => m.id === editId);
+    if (!med) return;
+    document.getElementById('med-modal-title').textContent = 'Editar Medicamento';
+    document.getElementById('f-name').value          = med.name;
+    document.getElementById('f-ingredient').value    = med.activeIngredient || '';
+    document.getElementById('f-dosage').value        = med.dosage || '';
+    document.getElementById('f-prescribed-for').value= med.prescribedFor || '';
+    document.getElementById('f-start-date').value    = med.startDate || '';
+    document.getElementById('f-doctor').value        = med.doctor || '';
+    document.getElementById('f-prospectus').value    = med.prospectusUrl || '';
+    document.getElementById('f-notes').value         = med.notes || '';
+    document.getElementById('f-sporadic-type').value = med.sporadicType || 'pain';
+    setCat(med.category);
+    setStatus(med.isActive !== false);
+    if (med.image) {
+      document.getElementById('f-image').value = med.image;
+      document.getElementById('img-preview-wrap').innerHTML = `<img src="${med.image}" class="img-preview">`;
+      document.getElementById('img-upload-area').classList.add('has-img');
+      document.getElementById('btn-remove-img').style.display = 'inline-flex';
+    }
+  } else {
+    document.getElementById('med-modal-title').textContent = 'Nuevo Medicamento';
+    setCat('chronic');
+    setStatus(true);
+  }
+  document.getElementById('med-overlay').classList.remove('hidden');
+}
+
+function setCat(cat) {
+  document.getElementById('f-category').value = cat;
+  document.getElementById('cat-chronic-btn').classList.toggle('active', cat === 'chronic');
+  document.getElementById('cat-sporadic-btn').classList.toggle('active', cat === 'sporadic');
+  document.getElementById('sporadic-type-row').style.display = cat === 'sporadic' ? '' : 'none';
+}
+
+function setStatus(active) {
+  document.getElementById('f-is-active').value = active ? 'true' : 'false';
+  document.getElementById('status-active-btn').classList.toggle('active', active);
+  document.getElementById('status-inactive-btn').classList.toggle('active', !active);
+}
+
+async function saveMedication() {
+  const form = document.getElementById('med-form');
+  if (!form.reportValidity()) return;
+
+  const existId = document.getElementById('f-id').value;
+  const existing = S.medications.find(m => m.id === existId);
+  const id = existId || U.uid();
+
+  const med = {
+    id,
+    name:            document.getElementById('f-name').value.trim(),
+    activeIngredient:document.getElementById('f-ingredient').value.trim(),
+    category:        document.getElementById('f-category').value,
+    sporadicType:    document.getElementById('f-sporadic-type').value,
+    dosage:          document.getElementById('f-dosage').value.trim(),
+    prescribedFor:   document.getElementById('f-prescribed-for').value.trim(),
+    startDate:       document.getElementById('f-start-date').value,
+    doctor:          document.getElementById('f-doctor').value.trim(),
+    prospectusUrl:   document.getElementById('f-prospectus').value.trim(),
+    notes:           document.getElementById('f-notes').value.trim(),
+    isActive:        document.getElementById('f-is-active').value === 'true',
+    image:           document.getElementById('f-image').value || null,
+    createdAt:       existing?.createdAt || new Date().toISOString(),
+    updatedAt:       new Date().toISOString(),
+  };
+
+  await DB.put('medications', med);
+  await loadData();
+  closeModal('med-overlay');
+  toast(`"${med.name}" guardado`, 'success');
+
+  if (S.view === 'detail' && S.detailId === id) renderDetail(id);
+  else navigate('medications');
+}
+
+/* ═══════════════════════════════════════════
+   ACQUISITION FORM
+═══════════════════════════════════════════ */
+function openAcqModal(presetMedId) {
+  const form = document.getElementById('acq-form');
+  form.reset();
+  document.getElementById('af-id').value   = '';
+  document.getElementById('af-date').value = new Date().toISOString().split('T')[0];
+
+  const sel = document.getElementById('af-med-id');
+  const meds = [...S.medications].sort((a,b) => a.name.localeCompare(b.name));
+  sel.innerHTML = `<option value="">Selecciona un medicamento…</option>` +
+    meds.map(m => `<option value="${m.id}">${U.esc(m.name)}</option>`).join('');
+  if (presetMedId) sel.value = presetMedId;
+
+  document.getElementById('acq-overlay').classList.remove('hidden');
+}
+
+async function saveAcquisition() {
+  const form = document.getElementById('acq-form');
+  if (!form.reportValidity()) return;
+
+  const medId = document.getElementById('af-med-id').value;
+  if (!medId) { toast('Selecciona un medicamento', 'error'); return; }
+
+  const existId  = document.getElementById('af-id').value;
+  const existing = S.acquisitions.find(a => a.id === existId);
+
+  const acq = {
+    id:             existId || U.uid(),
+    medicationId:   medId,
+    date:           document.getElementById('af-date').value,
+    pharmacy:       document.getElementById('af-pharmacy').value.trim(),
+    quantity:       parseInt(document.getElementById('af-quantity').value) || 1,
+    price:          document.getElementById('af-price').value !== '' ? +document.getElementById('af-price').value : null,
+    expirationDate: document.getElementById('af-expiry').value,
+    lot:            document.getElementById('af-lot').value.trim(),
+    notes:          document.getElementById('af-notes').value.trim(),
+    createdAt:      existing?.createdAt || new Date().toISOString(),
+  };
+
+  await DB.put('acquisitions', acq);
+  await loadData();
+  closeModal('acq-overlay');
+  toast('Compra registrada', 'success');
+
+  if (S.view === 'detail') renderDetail(S.detailId);
+  else if (S.view === 'acquisitions') renderAcquisitions();
+  else renderDashboard();
+}
+
+/* ═══════════════════════════════════════════
+   DELETE
+═══════════════════════════════════════════ */
+function confirmDelete(type, id, label) {
+  const msgs = {
+    medication:  `¿Eliminar "${label}"? Se borrarán también todas sus adquisiciones. Esta acción no se puede deshacer.`,
+    acquisition: '¿Eliminar este registro de compra?',
+  };
+  document.getElementById('confirm-msg').textContent = msgs[type];
+  document.getElementById('btn-confirm-ok').onclick = () => doDelete(type, id);
+  document.getElementById('confirm-overlay').classList.remove('hidden');
+}
+
+async function doDelete(type, id) {
+  closeModal('confirm-overlay');
+  if (type === 'medication') {
+    const medAcqs = S.acquisitions.filter(a => a.medicationId === id);
+    for (const a of medAcqs) await DB.remove('acquisitions', a.id);
+    await DB.remove('medications', id);
+    await loadData();
+    toast('Medicamento eliminado', 'success');
+    navigate('medications');
+  } else {
+    await DB.remove('acquisitions', id);
+    await loadData();
+    toast('Adquisición eliminada', 'success');
+    if (S.view === 'detail') renderDetail(S.detailId);
+    else if (S.view === 'acquisitions') renderAcquisitions();
+    else renderDashboard();
+  }
+}
+
+/* ═══════════════════════════════════════════
+   MODAL HELPERS
+═══════════════════════════════════════════ */
+function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+
+/* ═══════════════════════════════════════════
+   IMAGE UPLOAD
+═══════════════════════════════════════════ */
+function handleImage(file) {
+  if (!file) return;
+  if (file.size > 5 * 1024 * 1024) { toast('La imagen supera los 5 MB', 'error'); return; }
+  const reader = new FileReader();
+  reader.onload = e => {
+    const data = e.target.result;
+    document.getElementById('f-image').value = data;
+    document.getElementById('img-preview-wrap').innerHTML = `<img src="${data}" class="img-preview">`;
+    document.getElementById('img-upload-area').classList.add('has-img');
+    document.getElementById('btn-remove-img').style.display = 'inline-flex';
+  };
+  reader.readAsDataURL(file);
+}
+
+/* ═══════════════════════════════════════════
+   EXPORT / IMPORT
+═══════════════════════════════════════════ */
+function exportData() {
+  const payload = JSON.stringify({
+    version: 1,
+    exportDate: new Date().toISOString(),
+    medications:  S.medications,
+    acquisitions: S.acquisitions,
+  }, null, 2);
+  const a = Object.assign(document.createElement('a'), {
+    href:     URL.createObjectURL(new Blob([payload], { type: 'application/json' })),
+    download: `mifarmacia-${new Date().toISOString().slice(0,10)}.json`,
+  });
+  a.click();
+  URL.revokeObjectURL(a.href);
+  toast('Datos exportados', 'success');
+}
+
+async function importData(file) {
+  try {
+    const data = JSON.parse(await file.text());
+    if (!Array.isArray(data.medications) || !Array.isArray(data.acquisitions))
+      throw new Error('Formato no reconocido');
+    if (!confirm(`¿Importar ${data.medications.length} medicamentos y ${data.acquisitions.length} adquisiciones? Los datos actuales serán reemplazados.`))
+      return;
+    await DB.clear('medications');
+    await DB.clear('acquisitions');
+    for (const m of data.medications)  await DB.put('medications',  m);
+    for (const a of data.acquisitions) await DB.put('acquisitions', a);
+    await loadData();
+    navigate('dashboard');
+    toast(`Importados ${data.medications.length} medicamentos`, 'success');
+  } catch(e) {
+    toast('Error al importar: ' + e.message, 'error');
+  }
+}
+
+/* ═══════════════════════════════════════════
+   DATA LOAD
+═══════════════════════════════════════════ */
+async function loadData() {
+  [S.medications, S.acquisitions] = await Promise.all([
+    DB.getAll('medications'),
+    DB.getAll('acquisitions'),
+  ]);
+}
+
+/* ═══════════════════════════════════════════
+   DEMO SEED
+═══════════════════════════════════════════ */
+async function seedDemo() {
+  const addM = (n) => { const d = new Date(); d.setMonth(d.getMonth() + n); return d.toISOString().slice(0,7); };
+  const ids = [U.uid(), U.uid(), U.uid(), U.uid(), U.uid()];
+
+  const meds = [
+    { id:ids[0], name:'Enalapril 10mg',    activeIngredient:'Enalapril',  category:'chronic', sporadicType:null,        dosage:'1 comprimido cada 24 h en ayunas',             prescribedFor:'Control de la hipertensión arterial',      startDate:'2022-03-15', doctor:'Dr. Martínez',  prospectusUrl:'', notes:'Tomar siempre a la misma hora. Puede producir tos seca.', isActive:true,  image:null, createdAt:new Date().toISOString(), updatedAt:new Date().toISOString() },
+    { id:ids[1], name:'Omeprazol 20mg',    activeIngredient:'Omeprazol',  category:'chronic', sporadicType:null,        dosage:'1 cápsula cada 24 h antes del desayuno',       prescribedFor:'Protección gástrica',                      startDate:'2021-06-01', doctor:'Dr. García',   prospectusUrl:'', notes:'', isActive:true,  image:null, createdAt:new Date().toISOString(), updatedAt:new Date().toISOString() },
+    { id:ids[2], name:'Paracetamol 1g',    activeIngredient:'Paracetamol',category:'sporadic',sporadicType:'pain',      dosage:'1 comprimido cada 6-8 h (máx. 4 g/día)',       prescribedFor:'Dolor leve-moderado y fiebre',             startDate:'',           doctor:'',             prospectusUrl:'', notes:'No superar 4 comprimidos al día.', isActive:true,  image:null, createdAt:new Date().toISOString(), updatedAt:new Date().toISOString() },
+    { id:ids[3], name:'Ibuprofeno 600mg',  activeIngredient:'Ibuprofeno', category:'sporadic',sporadicType:'pain',      dosage:'1 comprimido cada 8 h con las comidas',        prescribedFor:'Dolor, inflamación y fiebre',              startDate:'',           doctor:'',             prospectusUrl:'', notes:'Tomar siempre con alimentos.', isActive:true,  image:null, createdAt:new Date().toISOString(), updatedAt:new Date().toISOString() },
+    { id:ids[4], name:'Loratadina 10mg',   activeIngredient:'Loratadina', category:'sporadic',sporadicType:'allergy',   dosage:'1 comprimido cada 24 h',                       prescribedFor:'Rinitis alérgica y urticaria',             startDate:'',           doctor:'Dr. Ruiz',     prospectusUrl:'', notes:'', isActive:true,  image:null, createdAt:new Date().toISOString(), updatedAt:new Date().toISOString() },
+  ];
+
+  const acqs = [
+    { id:U.uid(), medicationId:ids[0], date:'2025-04-10', pharmacy:'Farmacia Central',     quantity:2, price:3.80,  expirationDate:addM(14), lot:'AB12345', notes:'',                   createdAt:new Date().toISOString() },
+    { id:U.uid(), medicationId:ids[1], date:'2025-04-10', pharmacy:'Farmacia Central',     quantity:1, price:2.50,  expirationDate:addM(1),  lot:'CD67890', notes:'',                   createdAt:new Date().toISOString() },
+    { id:U.uid(), medicationId:ids[1], date:'2025-01-05', pharmacy:'Farmacia del Barrio',  quantity:1, price:2.30,  expirationDate:addM(-2), lot:'CC11111', notes:'Lote caducado',       createdAt:new Date().toISOString() },
+    { id:U.uid(), medicationId:ids[2], date:'2025-03-20', pharmacy:'Farmacia del Barrio',  quantity:2, price:3.80,  expirationDate:addM(20), lot:'EF11223', notes:'',                   createdAt:new Date().toISOString() },
+    { id:U.uid(), medicationId:ids[3], date:'2025-02-15', pharmacy:'El Corte Inglés Farm.',quantity:1, price:2.10,  expirationDate:addM(18), lot:'GH44556', notes:'',                   createdAt:new Date().toISOString() },
+    { id:U.uid(), medicationId:ids[4], date:'2025-04-01', pharmacy:'Farmacia Central',     quantity:1, price:4.50,  expirationDate:addM(10), lot:'LR99001', notes:'Temporada primavera', createdAt:new Date().toISOString() },
+  ];
+
+  for (const m of meds) await DB.put('medications',  m);
+  for (const a of acqs)  await DB.put('acquisitions', a);
+  await loadData();
+}
+
+/* ═══════════════════════════════════════════
+   EVENT DELEGATION
+═══════════════════════════════════════════ */
+document.addEventListener('click', e => {
+  const t = e.target.closest('[data-nav],[data-nav-detail],[data-edit-med],[data-del-med],[data-open-acq],[data-del-acq],[data-close],[data-filter],[data-tab],[data-cat]');
+  if (!t) return;
+
+  if (t.dataset.nav)        return navigate(t.dataset.nav);
+  if (t.dataset.navDetail)  return navigate('detail', t.dataset.navDetail);
+  if (t.dataset.editMed)    return openMedModal(t.dataset.editMed);
+  if (t.dataset.delMed) {
+    const med = S.medications.find(m => m.id === t.dataset.delMed);
+    return confirmDelete('medication', t.dataset.delMed, med?.name || '');
+  }
+  if (t.dataset.openAcq)    return openAcqModal(t.dataset.openAcq);
+  if (t.dataset.delAcq)     return confirmDelete('acquisition', t.dataset.delAcq, '');
+  if (t.dataset.close)      return closeModal(t.dataset.close);
+  if (t.dataset.filter) {
+    document.querySelectorAll('#med-filters .filter-tab').forEach(b => b.classList.remove('active'));
+    t.classList.add('active');
+    S.filter = t.dataset.filter;
+    return renderMedications();
+  }
+  if (t.dataset.tab) {
+    const pane = t.dataset.tab;
+    document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+    t.classList.add('active');
+    const p = document.getElementById(`tab-${pane}`);
+    if (p) p.classList.add('active');
+    return;
+  }
+  if (t.dataset.cat) return setCat(t.dataset.cat);
+});
+
+// Nav links
+document.querySelectorAll('.nav-link[data-nav]').forEach(btn => {
+  btn.addEventListener('click', () => navigate(btn.dataset.nav));
+});
+
+// Status toggle
+document.getElementById('status-active-btn').addEventListener('click', () => setStatus(true));
+document.getElementById('status-inactive-btn').addEventListener('click', () => setStatus(false));
+
+// Save buttons
+document.getElementById('btn-save-med').addEventListener('click', saveMedication);
+document.getElementById('btn-save-acq').addEventListener('click', saveAcquisition);
+
+// New buttons
+document.getElementById('btn-new-med').addEventListener('click', () => openMedModal());
+document.getElementById('btn-new-acq').addEventListener('click', () => openAcqModal());
+
+// Image upload
+document.getElementById('img-upload-area').addEventListener('click', () => document.getElementById('img-input').click());
+document.getElementById('img-input').addEventListener('change', e => handleImage(e.target.files[0]));
+document.getElementById('btn-remove-img').addEventListener('click', () => {
+  document.getElementById('f-image').value = '';
+  document.getElementById('img-input').value = '';
+  document.getElementById('img-preview-wrap').innerHTML = `
+    <div style="font-size:36px;margin-bottom:8px">📷</div>
+    <div style="font-size:13px;color:var(--text-muted)">Haz clic para subir la imagen de la caja</div>`;
+  document.getElementById('img-upload-area').classList.remove('has-img');
+  document.getElementById('btn-remove-img').style.display = 'none';
+});
+
+// AEMPS prospectus search
+document.getElementById('btn-search-prospectus').addEventListener('click', () => {
+  const name = document.getElementById('f-name').value.trim();
+  if (!name) { toast('Introduce primero el nombre del medicamento', 'warning'); return; }
+  window.open(`https://cima.aemps.es/cima/publico/buscadoravanzado.html#nombre=${encodeURIComponent(name)}`, '_blank');
+});
+
+// Med search
+document.getElementById('med-search').addEventListener('input', renderMedications);
+document.getElementById('acq-search').addEventListener('input', renderAcquisitions);
+
+// Export / Import
+document.getElementById('btn-export').addEventListener('click', exportData);
+document.getElementById('import-file').addEventListener('change', e => {
+  if (e.target.files[0]) importData(e.target.files[0]);
+  e.target.value = '';
+});
+
+// Close overlay on backdrop click
+document.querySelectorAll('.overlay').forEach(ov => {
+  ov.addEventListener('click', e => { if (e.target === ov) ov.classList.add('hidden'); });
+});
+
+// Escape key closes modals
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') document.querySelectorAll('.overlay:not(.hidden)').forEach(o => o.classList.add('hidden'));
+});
+
+// Image drag & drop
+const uploadArea = document.getElementById('img-upload-area');
+uploadArea.addEventListener('dragover', e => { e.preventDefault(); uploadArea.style.borderColor = 'var(--primary)'; });
+uploadArea.addEventListener('dragleave', () => { uploadArea.style.borderColor = ''; });
+uploadArea.addEventListener('drop', e => {
+  e.preventDefault();
+  uploadArea.style.borderColor = '';
+  handleImage(e.dataTransfer.files[0]);
+});
+
+/* ═══════════════════════════════════════════
+   BOOT
+═══════════════════════════════════════════ */
+(async () => {
+  await DB.init();
+  await loadData();
+  if (S.medications.length === 0) await seedDemo();
+  navigate('dashboard');
+})();
+</script>
+</body>
+</html>
