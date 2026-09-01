@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cifras y Letras</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="stage">
+
+  <header class="topbar">
+    <div class="logo">🔤 <span>Cifras</span> &amp; <span>Letras</span> 🔢</div>
+    <div class="scoreboard" id="scoreboard"></div>
+  </header>
+
+  <!-- SETUP SCREEN -->
+  <section id="screen-setup" class="screen active">
+    <div class="panel setup-panel">
+      <h1>Configura la partida</h1>
+
+      <div class="option-group">
+        <h2>Modo de juego</h2>
+        <div class="choice-row">
+          <button class="choice-btn active" data-players="1">🧑 Un jugador</button>
+          <button class="choice-btn" data-players="2">🧑‍🤝‍🧑 Dos jugadores</button>
+        </div>
+      </div>
+
+      <div class="option-group" id="names-group">
+        <h2>Nombres</h2>
+        <div class="choice-row">
+          <input type="text" id="p1-name" placeholder="Jugador 1" maxlength="16" value="Jugador 1">
+          <input type="text" id="p2-name" class="hidden" placeholder="Jugador 2" maxlength="16" value="Jugador 2">
+        </div>
+      </div>
+
+      <div class="option-group">
+        <h2>Número de pruebas</h2>
+        <div class="choice-row" id="rounds-row">
+          <button class="choice-btn" data-rounds="4">4</button>
+          <button class="choice-btn active" data-rounds="6">6</button>
+          <button class="choice-btn" data-rounds="8">8</button>
+        </div>
+      </div>
+
+      <button id="start-btn" class="primary-btn">Empezar ▶</button>
+
+      <p class="rae-note">Las palabras se comprueban en el <strong>Diccionario de la RAE</strong> (dle.rae.es) en tiempo real. Se necesita conexión a internet.</p>
+    </div>
+  </section>
+
+  <!-- GAME SCREEN: LETTERS -->
+  <section id="screen-letters" class="screen">
+    <div class="round-header">
+      <div class="round-badge">Prueba <span id="letters-round-num"></span> · Letras</div>
+      <div class="timer-wrap"><div class="timer-bar" id="letters-timer-bar"></div><span id="letters-timer-text">30</span></div>
+    </div>
+
+    <div class="panel">
+      <div id="letters-draw-controls" class="draw-controls">
+        <p>Pide <strong>vocal</strong> o <strong>consonante</strong> hasta completar 9 letras:</p>
+        <div class="choice-row">
+          <button id="btn-vocal" class="tile-btn vocal-btn">VOCAL</button>
+          <button id="btn-consonante" class="tile-btn consonante-btn">CONSONANTE</button>
+        </div>
+      </div>
+
+      <div class="tiles" id="letter-tiles"></div>
+
+      <div id="letters-play-area" class="play-area hidden">
+        <div class="players-inputs" id="letters-inputs"></div>
+        <button id="letters-check-btn" class="primary-btn">Comprobar palabras en la RAE</button>
+      </div>
+
+      <div id="letters-results" class="results hidden"></div>
+      <button id="letters-next-btn" class="secondary-btn hidden">Siguiente prueba ▶</button>
+    </div>
+  </section>
+
+  <!-- GAME SCREEN: NUMBERS -->
+  <section id="screen-numbers" class="screen">
+    <div class="round-header">
+      <div class="round-badge">Prueba <span id="numbers-round-num"></span> · Números</div>
+      <div class="timer-wrap"><div class="timer-bar" id="numbers-timer-bar"></div><span id="numbers-timer-text">30</span></div>
+    </div>
+
+    <div class="panel">
+      <div id="numbers-draw-controls" class="draw-controls">
+        <p>Elige cuántos números <strong>grandes</strong> quieres (25, 50, 75, 100) — máximo 4. El resto serán pequeños (1-10).</p>
+        <div class="choice-row" id="large-choice-row"></div>
+      </div>
+
+      <div class="numbers-target hidden" id="numbers-target-wrap">
+        <div class="target-label">Objetivo</div>
+        <div class="target-number" id="target-number"></div>
+      </div>
+
+      <div class="tiles" id="number-tiles"></div>
+
+      <div id="numbers-play-area" class="play-area hidden">
+        <div class="players-inputs" id="numbers-inputs"></div>
+        <button id="numbers-check-btn" class="primary-btn">Comprobar operaciones</button>
+      </div>
+
+      <div id="numbers-results" class="results hidden"></div>
+      <button id="numbers-next-btn" class="secondary-btn hidden">Siguiente prueba ▶</button>
+    </div>
+  </section>
+
+  <!-- FINAL SCREEN -->
+  <section id="screen-final" class="screen">
+    <div class="panel final-panel">
+      <h1 id="final-title">¡Fin de la partida!</h1>
+      <div id="final-scores"></div>
+      <button id="restart-btn" class="primary-btn">Jugar otra vez</button>
+    </div>
+  </section>
+
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
