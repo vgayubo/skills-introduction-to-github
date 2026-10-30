@@ -1,0 +1,496 @@
+<title>Forja de Claves</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Schibsted+Grotesk:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: una columna estrecha; la clave es el objeto central, las opciones debajo como panel de instrumento */
+:root {
+  --bg: #eceff3;
+  --surface: #ffffff;
+  --ink: #131923;
+  --muted: #5a6373;
+  --line: #d3d9e2;
+  --accent: #1f4fd1;
+  --accent-ink: #ffffff;
+  --digit: #08795a;
+  --symbol: #b2461a;
+  --s1: #c42f2f; --s2: #d4731a; --s3: #a8900f; --s4: #2c8a4b; --s5: #16766a;
+  --font-ui: "Schibsted Grotesk", "Segoe UI", system-ui, sans-serif;
+  --font-key: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  --r: 10px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0e1218; --surface: #161b24; --ink: #e7ebf1; --muted: #97a0af; --line: #29313e;
+    --accent: #7ea1ff; --accent-ink: #0e1218; --digit: #4fd0a4; --symbol: #ff9b6c;
+    --s1: #ff6b6b; --s2: #ffa14a; --s3: #e3c84a; --s4: #5fcf85; --s5: #4fd0c0;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0e1218; --surface: #161b24; --ink: #e7ebf1; --muted: #97a0af; --line: #29313e;
+  --accent: #7ea1ff; --accent-ink: #0e1218; --digit: #4fd0a4; --symbol: #ff9b6c;
+  --s1: #ff6b6b; --s2: #ffa14a; --s3: #e3c84a; --s4: #5fcf85; --s5: #4fd0c0;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body {
+  background: var(--bg); color: var(--ink); font-family: var(--font-ui); font-size: 15px; line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 32px 48px;
+}
+.wrap { max-width: 720px; margin: 0 auto; display: grid; gap: 24px; }
+header { display: grid; gap: 4px; }
+h1 { font-size: 28px; line-height: 1.15; margin: 0; letter-spacing: -0.01em; text-wrap: balance; }
+.lede { margin: 0; color: var(--muted); max-width: 60ch; }
+.eyebrow { font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--muted); font-weight: 600; }
+
+/* Clave */
+.vault { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 20px; display: grid; gap: 16px; }
+.key {
+  font-family: var(--font-key); font-size: clamp(18px, 4.2vw, 26px); font-weight: 500; line-height: 1.45;
+  word-break: break-all; min-height: 2.9em; user-select: all; letter-spacing: 0.02em;
+}
+.key .d { color: var(--digit); }
+.key .s { color: var(--symbol); }
+.key .sep { color: var(--muted); }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; }
+button { font: inherit; cursor: pointer; }
+.btn {
+  border: 1px solid var(--line); background: var(--surface); color: var(--ink);
+  padding: 9px 16px; border-radius: 8px; font-weight: 600; display: inline-flex; align-items: center; gap: 8px;
+}
+.btn:hover { border-color: var(--muted); }
+.btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.btn.primary:hover { filter: brightness(1.08); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.btn svg { width: 16px; height: 16px; }
+
+/* Medidor */
+.meter { display: grid; gap: 8px; }
+.bars { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; }
+.bars span { height: 6px; border-radius: 3px; background: var(--line); transition: background .2s; }
+.meter-row { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 16px; font-size: 14px; }
+.level { font-weight: 700; }
+.stats { color: var(--muted); font-variant-numeric: tabular-nums; }
+.formula { font-family: var(--font-key); font-size: 12.5px; color: var(--muted); border-top: 1px dashed var(--line); padding-top: 12px; overflow-wrap: anywhere; }
+
+/* Modos */
+.tabs { display: inline-flex; background: var(--surface); border: 1px solid var(--line); border-radius: 9px; padding: 3px; gap: 2px; flex-wrap: wrap; }
+.tabs button { border: 0; background: transparent; color: var(--muted); padding: 7px 14px; border-radius: 6px; font-weight: 600; }
+.tabs button[aria-selected="true"] { background: var(--ink); color: var(--surface); }
+
+.panel { display: grid; gap: 18px; }
+.field { display: grid; gap: 6px; }
+.field-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+label { font-weight: 600; }
+.val { font-family: var(--font-key); font-weight: 600; font-variant-numeric: tabular-nums; }
+input[type="range"] { width: 100%; accent-color: var(--accent); }
+.checks { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 8px; }
+.check {
+  display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 1px solid var(--line);
+  border-radius: 8px; background: var(--surface); cursor: pointer; font-weight: 500; min-width: 0;
+}
+.check input { accent-color: var(--accent); width: 16px; height: 16px; margin: 0; flex: none; }
+.check code { font-family: var(--font-key); font-size: 12px; color: var(--muted); margin-left: auto; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+input[type="text"], select {
+  font: inherit; font-family: var(--font-key); padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px;
+  background: var(--surface); color: var(--ink); width: 100%;
+}
+.row2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+.hint { font-size: 13px; color: var(--muted); margin: 0; }
+.warn { font-size: 13px; color: var(--s1); margin: 0; font-weight: 600; }
+
+/* Historial */
+.history { display: grid; gap: 8px; }
+.history h2 { font-size: 15px; margin: 0; }
+.hist-list { list-style: none; margin: 0; padding: 0; display: grid; border: 1px solid var(--line); border-radius: var(--r); background: var(--surface); }
+.hist-list li { display: flex; align-items: center; gap: 12px; padding: 8px 12px; border-top: 1px solid var(--line); min-width: 0; }
+.hist-list li:first-child { border-top: 0; }
+.hist-list .k { font-family: var(--font-key); font-size: 13.5px; flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.hist-list .b { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.mini { border: 1px solid var(--line); background: transparent; color: var(--ink); border-radius: 6px; padding: 4px 10px; font-size: 13px; font-weight: 600; }
+.empty { padding: 14px 12px; color: var(--muted); font-size: 14px; }
+
+footer { font-size: 13px; color: var(--muted); display: grid; gap: 6px; max-width: 65ch; }
+footer p { margin: 0; }
+
+.toast {
+  position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%) translateY(20px);
+  background: var(--ink); color: var(--surface); padding: 10px 16px; border-radius: 8px; font-weight: 600; font-size: 14px;
+  opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <span class="eyebrow">Generador local · crypto.getRandomValues</span>
+    <h1>Forja de Claves</h1>
+    <p class="lede">Contraseñas, frases de paso y PIN generados en tu navegador con un generador criptográfico. Nada se envía ni se guarda.</p>
+  </header>
+
+  <section class="vault" aria-label="Clave generada">
+    <div class="key" id="key" aria-live="polite"></div>
+    <div class="actions">
+      <button class="btn primary" id="copy" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>
+        Copiar
+      </button>
+      <button class="btn" id="regen" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 0 1 15.5-6.2L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15.5 6.2L3 16"/><path d="M3 21v-5h5"/></svg>
+        Generar otra
+      </button>
+    </div>
+    <div class="meter">
+      <div class="bars" id="bars" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div>
+      <div class="meter-row">
+        <span class="level" id="level">—</span>
+        <span class="stats" id="stats">—</span>
+      </div>
+    </div>
+    <div class="formula" id="formula"></div>
+  </section>
+
+  <div class="tabs" role="tablist" aria-label="Tipo de clave">
+    <button role="tab" id="tab-pass" data-mode="pass" aria-selected="true" type="button">Contraseña</button>
+    <button role="tab" id="tab-phrase" data-mode="phrase" aria-selected="false" type="button">Frase de paso</button>
+    <button role="tab" id="tab-pin" data-mode="pin" aria-selected="false" type="button">PIN</button>
+  </div>
+
+  <section class="panel" id="panel-pass" role="tabpanel" aria-labelledby="tab-pass">
+    <div class="field">
+      <div class="field-head"><label for="len">Longitud</label><span class="val" id="len-v">20</span></div>
+      <input type="range" id="len" min="6" max="64" value="20">
+    </div>
+    <div class="checks">
+      <label class="check"><input type="checkbox" id="c-upper" checked> Mayúsculas <code>A–Z</code></label>
+      <label class="check"><input type="checkbox" id="c-lower" checked> Minúsculas <code>a–z</code></label>
+      <label class="check"><input type="checkbox" id="c-digit" checked> Números <code>0–9</code></label>
+      <label class="check"><input type="checkbox" id="c-symbol" checked> Símbolos <code id="sym-preview">!@#$%</code></label>
+      <label class="check"><input type="checkbox" id="c-ambig"> Evitar ambiguos <code>Il1O0o</code></label>
+    </div>
+    <div class="field">
+      <label for="symbols">Símbolos permitidos</label>
+      <input type="text" id="symbols" value="!@#$%^&amp;*()-_=+[]{};:,.?/" spellcheck="false" autocomplete="off">
+      <p class="hint">Algunos sitios rechazan ciertos símbolos. Edita la lista para ajustarte a sus reglas.</p>
+    </div>
+    <p class="warn" id="pass-warn" hidden>Marca al menos un tipo de carácter.</p>
+  </section>
+
+  <section class="panel" id="panel-phrase" role="tabpanel" aria-labelledby="tab-phrase" hidden>
+    <div class="field">
+      <div class="field-head"><label for="words">Número de palabras</label><span class="val" id="words-v">7</span></div>
+      <input type="range" id="words" min="3" max="12" value="7">
+    </div>
+    <div class="row2">
+      <div class="field">
+        <label for="sep">Separador</label>
+        <select id="sep">
+          <option value="-">Guion  ( - )</option>
+          <option value=".">Punto  ( . )</option>
+          <option value="_">Guion bajo  ( _ )</option>
+          <option value=" ">Espacio</option>
+          <option value="">Ninguno</option>
+        </select>
+      </div>
+      <div class="field">
+        <span class="eyebrow" style="padding-top:2px">Extras</span>
+        <label class="check"><input type="checkbox" id="p-cap" checked> Primera letra en mayúscula</label>
+        <label class="check"><input type="checkbox" id="p-num" checked> Añadir un número (0–99)</label>
+      </div>
+    </div>
+    <p class="hint" id="phrase-hint"></p>
+  </section>
+
+  <section class="panel" id="panel-pin" role="tabpanel" aria-labelledby="tab-pin" hidden>
+    <div class="field">
+      <div class="field-head"><label for="pinlen">Dígitos</label><span class="val" id="pinlen-v">6</span></div>
+      <input type="range" id="pinlen" min="4" max="12" value="6">
+    </div>
+    <p class="hint">Un PIN solo es seguro cuando el sistema bloquea tras pocos intentos fallidos, como una tarjeta o un móvil. No lo uses como contraseña de una web.</p>
+  </section>
+
+  <section class="history" aria-label="Historial">
+    <div class="field-head"><h2>Generadas en esta sesión</h2><button class="mini" id="clear" type="button">Borrar</button></div>
+    <ul class="hist-list" id="hist"></ul>
+    <p class="hint">El historial vive solo en esta pestaña y desaparece al cerrarla.</p>
+  </section>
+
+  <footer>
+    <p>La entropía mide cuántas claves distintas podría producir esta configuración. El tiempo estimado supone un ataque fuera de línea a 100 000 millones de intentos por segundo, que es lo que alcanza un equipo con varias GPU contra un hash rápido.</p>
+    <p>Recomendación: 80 bits o más para cuentas importantes; 100 bits o más para claves maestras de un gestor de contraseñas.</p>
+  </footer>
+</div>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+
+  // Entero uniforme en [0, n) con muestreo por rechazo para evitar sesgo de módulo
+  const buf = new Uint32Array(1);
+  function randInt(n) {
+    const limit = Math.floor(0x100000000 / n) * n;
+    let x;
+    do { crypto.getRandomValues(buf); x = buf[0]; } while (x >= limit);
+    return x % n;
+  }
+  const pick = s => s[randInt(s.length)];
+  function shuffle(a) {
+    for (let i = a.length - 1; i > 0; i--) { const j = randInt(i + 1); [a[i], a[j]] = [a[j], a[i]]; }
+    return a;
+  }
+
+  const SETS = {
+    upper: "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+    lower: "abcdefghijklmnopqrstuvwxyz",
+    digit: "0123456789"
+  };
+  const AMBIG = "Il1O0o|`'\"";
+
+  const WORDS = [...new Set(`
+abeja abrazo abrigo abuelo aceite acero agua aguila ala alba aldea alegria almendra alma altura amigo ancla angel anillo antena arbol arcilla arena arroz arte asiento astro atlas aurora avena aventura avion azucar
+bahia baile balcon ballena banco bandera barca barro baston bosque bota botella brazo brisa brujula buho burbuja
+caballo cabra cacao cadena cafe caja calabaza calle cama camino campana campo canela cangrejo canoa cantera capa cara carbon carta casa castillo cebolla cedro cereza cesta cielo cine circo ciruela ciudad clavel clima cobre cocina cofre cohete colina collar color cometa concha copa corazon cordero coral corona cuaderno cuerda cueva cumbre
+dado danza delfin desierto diamante dibujo diente disco dragon duende duna
+eco eclipse encina enigma escalera escudo espejo espiga estrella estufa
+faro fiesta flauta flecha flor foca fogata fresa fruta fuego fuente
+galaxia galleta ganso garza gato gema girasol globo golondrina gorrion granja grillo guante guitarra
+haba hada hamaca harina helado helecho hielo hierba higo hoguera hoja hongo horizonte hormiga horno huerto huevo humo
+iglesia imán isla
+jabali jabon jardin jarra jazmin jirafa joya junco
+koala
+laberinto ladrillo lago lampara lana lapiz laurel leche lechuza lengua leon libro liebre lima limon lince lino lirio llama llave lluvia lobo loro luna lupa luz
+madera maiz manantial mango manta manzana mapa mar marfil mariposa martillo melon menta mesa miel mimbre mirlo molino moneda monte mora mosaico motor muelle mundo musgo musica
+naranja nave niebla nieve nido noche norte nube nuez
+oasis ola olivo olmo onda oro orquidea oso otono oveja
+pajaro palacio palmera paloma pan panal pantera papel paraguas pasillo pastel patio pato pera perla piano piedra pimienta pino pinza pirata planeta plata playa pluma polvo poncho potro pradera puente puerta pulpo
+queso quimera
+rama rana rayo refugio reloj remo rio roble roca rocio rosa rubi rueda ruta
+sabana sal salmon salvia sandia sardina selva semilla sendero serpiente sierra silla sirena sol sombra sombrero sonrisa
+tabla tambor taza teatro tejado telar tesoro tierra tigre tinta tomate tormenta torre tortuga trigo trueno tulipan tunel
+uva
+vaca valle vapor vela velero ventana verano viento vino violin volcan
+yegua yunque
+zafiro zanahoria zapato zorro
+abanico acordeon aguacate ajedrez alambre alfombra almohada amapola ancho anguila arcoiris ardilla armario arpa bambu banjo barril bisonte bombilla bufanda cactus camello canasta caracol carpeta cascada castor cebra cigarra cisne cometa conejo cuarzo cuchara dedal escoba esponja farol fresno gacela gaviota gorila granada grulla halcon hiedra hipopotamo jaguar lagarto langosta linterna lombriz mandarina mapache medusa mochila morsa nutria pelicano pinguino puma rinoceronte salamandra saltamontes tejon tiburon tucan turquesa urraca vainilla zarza
+`.trim().split(/\s+/).map(w => w.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase()))];
+
+  const state = { mode: "pass", current: "", bits: 0, history: [] };
+
+  function loadPrefs() {
+    try {
+      const p = JSON.parse(localStorage.getItem("forja-prefs") || "null");
+      if (!p) return;
+      for (const [id, v] of Object.entries(p.inputs || {})) {
+        const el = $(id); if (!el) continue;
+        if (el.type === "checkbox") el.checked = !!v; else el.value = v;
+      }
+      if (p.mode) state.mode = p.mode;
+    } catch (e) {}
+  }
+  function savePrefs() {
+    try {
+      const inputs = {};
+      document.querySelectorAll(".panel input, .panel select").forEach(el => {
+        inputs[el.id] = el.type === "checkbox" ? el.checked : el.value;
+      });
+      localStorage.setItem("forja-prefs", JSON.stringify({ mode: state.mode, inputs }));
+    } catch (e) {}
+  }
+
+  function passPools() {
+    const avoid = $("c-ambig").checked;
+    const clean = s => avoid ? [...s].filter(c => !AMBIG.includes(c)).join("") : s;
+    const symbols = [...new Set([...$("symbols").value.replace(/\s/g, "")])].join("");
+    const pools = [];
+    if ($("c-upper").checked) pools.push(clean(SETS.upper));
+    if ($("c-lower").checked) pools.push(clean(SETS.lower));
+    if ($("c-digit").checked) pools.push(clean(SETS.digit));
+    if ($("c-symbol").checked && symbols) pools.push(clean(symbols));
+    return pools.filter(p => p.length);
+  }
+
+  function genPassword() {
+    const len = +$("len").value;
+    const pools = passPools();
+    $("pass-warn").hidden = pools.length > 0;
+    if (!pools.length) return { text: "", bits: 0, formula: "Sin caracteres disponibles." };
+    const all = [...new Set(pools.join(""))].join("");
+    // Garantiza al menos un carácter de cada tipo marcado
+    const chars = pools.slice(0, len).map(pick);
+    while (chars.length < len) chars.push(pick(all));
+    shuffle(chars);
+    const bits = len * Math.log2(all.length);
+    return {
+      text: chars.join(""), bits,
+      formula: `${all.length} caracteres posibles, ${len} posiciones → log₂(${all.length}^${len}) ≈ ${bits.toFixed(1)} bits`
+    };
+  }
+
+  function genPhrase() {
+    const n = +$("words").value;
+    const sep = $("sep").value;
+    const cap = $("p-cap").checked;
+    const num = $("p-num").checked;
+    const words = Array.from({ length: n }, () => {
+      const w = pick(WORDS);
+      return cap ? w[0].toUpperCase() + w.slice(1) : w;
+    });
+    let extraBits = 0;
+    if (num) {
+      const pos = randInt(n);
+      words[pos] = words[pos] + randInt(100);
+      extraBits = Math.log2(100) + Math.log2(n);
+    }
+    const bits = n * Math.log2(WORDS.length) + extraBits;
+    $("phrase-hint").textContent = `Diccionario de ${WORDS.length} palabras en español sin tildes, para que se tecleen igual en cualquier teclado.`;
+    return {
+      text: words.join(sep), bits,
+      formula: `${n} palabras de un diccionario de ${WORDS.length} → ${n} × log₂(${WORDS.length})${num ? " + número" : ""} ≈ ${bits.toFixed(1)} bits`
+    };
+  }
+
+  function genPin() {
+    const n = +$("pinlen").value;
+    let s = "";
+    for (let i = 0; i < n; i++) s += randInt(10);
+    const bits = n * Math.log2(10);
+    return { text: s, bits, formula: `10 dígitos posibles, ${n} posiciones → log₂(10^${n}) ≈ ${bits.toFixed(1)} bits` };
+  }
+
+  const LEVELS = [
+    { max: 40, name: "Muy débil", c: "--s1" },
+    { max: 60, name: "Débil", c: "--s2" },
+    { max: 80, name: "Aceptable", c: "--s3" },
+    { max: 100, name: "Fuerte", c: "--s4" },
+    { max: Infinity, name: "Muy fuerte", c: "--s5" }
+  ];
+
+  function crackTime(bits) {
+    // Tiempo medio: la mitad del espacio a 1e11 intentos/s
+    const log10s = (bits - 1) * Math.LOG10E * Math.LN2 - 11;
+    if (log10s > 18) return "más que la edad del universo";
+    const s = Math.pow(10, log10s);
+    const units = [
+      [3.156e9, "siglos"], [3.156e7, "años"], [86400, "días"], [3600, "horas"], [60, "minutos"], [1, "segundos"]
+    ];
+    if (s < 1) return "menos de un segundo";
+    for (const [u, name] of units) {
+      if (s >= u) {
+        const v = s / u;
+        const txt = v >= 1e6 ? v.toExponential(1).replace("e+", " × 10^") : Math.round(v).toLocaleString("es-ES");
+        return `${txt} ${name}`;
+      }
+    }
+  }
+
+  function escapeHtml(c) { return c === "<" ? "&lt;" : c === ">" ? "&gt;" : c === "&" ? "&amp;" : c === '"' ? "&quot;" : c; }
+  function render(text) {
+    if (!text) return '<span class="sep">—</span>';
+    if (state.mode === "pin") return text.replace(/(\d{3})(?=\d)/g, "$1 ");
+    const sep = state.mode === "phrase" ? $("sep").value : null;
+    return [...text].map(c => {
+      if (sep && c === sep && sep !== "") return `<span class="sep">${escapeHtml(c)}</span>`;
+      if (/\d/.test(c)) return `<span class="d">${c}</span>`;
+      if (!/[A-Za-z ]/.test(c)) return `<span class="s">${escapeHtml(c)}</span>`;
+      return escapeHtml(c);
+    }).join("");
+  }
+
+  function generate(addToHistory = true) {
+    const r = state.mode === "pass" ? genPassword() : state.mode === "phrase" ? genPhrase() : genPin();
+    state.current = r.text;
+    state.bits = r.bits;
+    $("key").innerHTML = render(r.text);
+    $("formula").textContent = r.formula;
+    const li = LEVELS.findIndex(l => r.bits < l.max);
+    const lvl = LEVELS[li];
+    const color = `var(${lvl.c})`;
+    [...$("bars").children].forEach((b, i) => b.style.background = r.text && i <= li ? color : "");
+    $("level").textContent = r.text ? lvl.name : "—";
+    $("level").style.color = r.text ? color : "";
+    $("stats").textContent = r.text ? `${Math.round(r.bits)} bits · descifrado en ${crackTime(r.bits)}` : "—";
+    if (addToHistory && r.text) pushHistory(r.text, r.bits);
+    savePrefs();
+  }
+
+  function pushHistory(text, bits) {
+    state.history.unshift({ text, bits });
+    state.history = state.history.slice(0, 8);
+    renderHistory();
+  }
+  function renderHistory() {
+    const ul = $("hist");
+    ul.innerHTML = "";
+    if (!state.history.length) {
+      ul.innerHTML = '<li class="empty">Aún no hay claves en esta sesión.</li>';
+      return;
+    }
+    state.history.forEach(h => {
+      const li = document.createElement("li");
+      const k = document.createElement("span"); k.className = "k"; k.textContent = h.text;
+      const b = document.createElement("span"); b.className = "b"; b.textContent = `${Math.round(h.bits)} bits`;
+      const btn = document.createElement("button"); btn.className = "mini"; btn.type = "button"; btn.textContent = "Copiar";
+      btn.addEventListener("click", () => copy(h.text, k));
+      li.append(k, b, btn);
+      ul.append(li);
+    });
+  }
+
+  let toastTimer;
+  function toast(msg) {
+    const t = $("toast");
+    t.textContent = msg; t.classList.add("show");
+    clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove("show"), 1800);
+  }
+  function selectText(el) {
+    const range = document.createRange(); range.selectNodeContents(el);
+    const sel = getSelection(); sel.removeAllRanges(); sel.addRange(range);
+  }
+  function copy(text, el) {
+    if (!text) return;
+    const fallback = () => { selectText(el); toast("Seleccionada: pulsa Ctrl+C o ⌘C para copiar"); };
+    try {
+      navigator.clipboard.writeText(text).then(() => toast("Copiada al portapapeles"), fallback);
+    } catch (e) { fallback(); }
+  }
+
+  function setMode(mode) {
+    state.mode = mode;
+    document.querySelectorAll('[role="tab"]').forEach(t => t.setAttribute("aria-selected", t.dataset.mode === mode));
+    $("panel-pass").hidden = mode !== "pass";
+    $("panel-phrase").hidden = mode !== "phrase";
+    $("panel-pin").hidden = mode !== "pin";
+    generate();
+  }
+
+  function syncLabels() {
+    $("len-v").textContent = $("len").value;
+    $("words-v").textContent = $("words").value;
+    $("pinlen-v").textContent = $("pinlen").value;
+    const sym = [...new Set([...$("symbols").value.replace(/\s/g, "")])].join("");
+    $("sym-preview").textContent = sym.slice(0, 6) || "—";
+  }
+
+  // Eventos
+  document.querySelectorAll('[role="tab"]').forEach(t => t.addEventListener("click", () => setMode(t.dataset.mode)));
+  document.querySelectorAll(".panel input, .panel select").forEach(el => {
+    const ev = el.type === "range" || el.type === "text" ? "input" : "change";
+    el.addEventListener(ev, () => { syncLabels(); generate(el.type !== "range" && el.type !== "text"); });
+    if (el.type === "range" || el.type === "text") el.addEventListener("change", () => state.current && pushHistory(state.current, state.bits));
+  });
+  $("regen").addEventListener("click", () => generate());
+  $("copy").addEventListener("click", () => copy(state.current, $("key")));
+  $("clear").addEventListener("click", () => { state.history = []; renderHistory(); toast("Historial borrado"); });
+
+  loadPrefs();
+  syncLabels();
+  setMode(state.mode);
+})();
+</script>
